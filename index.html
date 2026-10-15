@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Греческие глаголы</title>
+  <meta name="description" content="Тренажёр греческих глаголов уровней A1–B1: карточки, спряжение, аорист, будущее время.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='white' font-family='Georgia,serif'%3E%CE%B1%3C/text%3E%3C/svg%3E">
+  <script>
+    // тема ставится до отрисовки, иначе тёмная тема мигает светлой при загрузке
+    try {
+      var t = (JSON.parse(localStorage.getItem("greek-verbs.progress") || "{}").settings || {}).theme;
+      if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1 class="brand"><span class="brand-mark" aria-hidden="true">α</span> Греческие глаголы</h1>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Тема оформления"></button>
+      <button class="icon-btn" id="settings-btn" type="button" aria-label="Списки и прогресс" title="Списки и прогресс">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Режимы тренажёра" id="tabs"></nav>
+
+  <main id="main">
+    <div class="storage-warning" id="storage-warning" hidden>
+      Браузер не даёт сохранять прогресс — после закрытия страницы он пропадёт. Сохраните его в файл через ⚙.
+    </div>
+
+    <!-- Вкладка 1: настоящее время, 1-е лицо — сам словарь глаголов -->
+    <section class="panel" id="panel-present1" role="tabpanel" aria-labelledby="tab-present1">
+      <div class="controls">
+        <div class="filters">
+          <div class="ms" id="ms-levels">
+            <button type="button" class="ms-btn" aria-haspopup="true" aria-expanded="false" aria-controls="levels">
+              <span class="ms-label">Уровень</span> <span class="ms-value"></span>
+            </button>
+            <div class="ms-pop" role="group" aria-label="Уровень знаний" id="levels" hidden></div>
+          </div>
+          <div class="ms" id="ms-types">
+            <button type="button" class="ms-btn" aria-haspopup="true" aria-expanded="false" aria-controls="types">
+              <span class="ms-label">Спряжение</span> <span class="ms-value"></span>
+            </button>
+            <div class="ms-pop" role="group" aria-label="Тип спряжения" id="types" hidden></div>
+          </div>
+        </div>
+        <div class="dir" role="radiogroup" aria-label="Направление" id="dir">
+          <button type="button" role="radio" data-dir="gr-ru">GR → RU</button>
+          <button type="button" role="radio" data-dir="ru-gr">RU → GR</button>
+        </div>
+      </div>
+
+      <!-- плашка после «Верно» ложится поверх строки счётчика, по её центру -->
+      <div class="counter-wrap">
+        <p class="counter" id="counter" aria-live="polite"></p>
+        <p class="toast" id="toast" role="status" hidden></p>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="card" id="card" role="button" tabindex="0" aria-live="polite">
+          <div class="card-face">
+            <div class="card-word" id="card-front"></div>
+            <div class="card-alt" id="card-alt"></div>
+            <div class="card-meta" id="card-meta"></div>
+          </div>
+          <button class="speak" id="card-speak" type="button" aria-label="Произнести" title="Произнести" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          </button>
+          <div class="card-hint" id="card-hint">нажмите или пробел — перевернуть</div>
+        </div>
+
+        <div class="actions" id="actions" hidden>
+          <button type="button" class="btn btn-know" data-act="know">Знаю</button>
+          <button type="button" class="btn btn-learn" data-act="learn">Повторить</button>
+          <button type="button" class="btn btn-skip" data-act="skip">Не учим</button>
+        </div>
+        <div class="actions two" id="actions-forms" hidden>
+          <button type="button" class="btn btn-know" data-act="master">Верно</button>
+          <button type="button" class="btn btn-learn" data-act="again">Повторить</button>
+        </div>
+        <button type="button" class="btn btn-pass" id="pass-btn">Пропустить</button>
+        <button type="button" class="btn-link" id="example-btn" hidden>Пример</button>
+        <div class="example" id="example" hidden>
+          <p class="example-el"><span id="example-el"></span>
+            <button class="speak speak-inline" id="example-speak" type="button" aria-label="Произнести пример" title="Произнести" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </button>
+          </p>
+          <p class="example-ru" id="example-ru"></p>
+        </div>
+      </div>
+
+      <div class="empty" id="empty" hidden>
+        <p class="empty-title" id="empty-title"></p>
+        <p id="empty-text"></p>
+        <button type="button" class="btn" id="empty-open">Открыть списки</button>
+      </div>
+    </section>
+
+    <!-- Будущие вкладки: заглушки, рисуются из app.js -->
+    <section class="panel" id="panel-later" role="tabpanel" hidden>
+      <div class="empty">
+        <p class="empty-title" id="later-title"></p>
+        <p id="later-text"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Формы глаголов — <a href="https://en.wiktionary.org/" target="_blank" rel="noopener">Викисловарь</a> (CC BY-SA 4.0),
+    примеры — <a href="https://tatoeba.org/" target="_blank" rel="noopener">Tatoeba</a> (CC BY 2.0 FR).
+    Часть переводов и примеров составлена с помощью Claude.
+  </footer>
+
+  <!-- Списки и перенос прогресса -->
+  <dialog class="dialog" id="settings" aria-labelledby="settings-title">
+    <div class="dialog-head">
+      <h2 id="settings-title">Списки и прогресс</h2>
+      <button class="icon-btn" type="button" id="settings-close" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="list-tabs" role="tablist" id="list-tabs">
+      <button type="button" role="tab" data-list="known">Знаю <span class="badge"></span></button>
+      <button type="button" role="tab" data-list="mastered">Освоено <span class="badge"></span></button>
+      <button type="button" role="tab" data-list="skip">Не учим <span class="badge"></span></button>
+    </div>
+    <div class="list-row">
+      <input class="search" id="list-search" type="search" placeholder="Поиск по глаголу или переводу" autocomplete="off">
+      <!-- «Знаю» и «Освоено» свои для каждого направления, «Не учим» — общий: у него переключателя нет -->
+      <div class="dir dir-small" role="radiogroup" aria-label="Направление списка" id="list-dir">
+        <button type="button" role="radio" data-dir="gr-ru">GR → RU</button>
+        <button type="button" role="radio" data-dir="ru-gr">RU → GR</button>
+      </div>
+    </div>
+    <ul class="list" id="list"></ul>
+    <p class="list-empty" id="list-empty" hidden></p>
+    <div class="list-foot">
+      <button type="button" class="btn-link danger" id="list-clear">Очистить этот список</button>
+      <span class="confirm" id="list-clear-confirm" hidden>
+        Точно очистить?
+        <button type="button" class="btn-link danger" id="list-clear-yes">Да</button>
+        <button type="button" class="btn-link" id="list-clear-no">Нет</button>
+      </span>
+    </div>
+
+    <h3>Усвоение</h3>
+    <label class="switch-row">
+      <input type="checkbox" role="switch" id="mastery-on"> Учитывать усвоение
+    </label>
+    <label class="goal-row" id="mastery-goal-row">
+      Форма освоена после <input type="number" id="mastery-goal" min="1" max="20" inputmode="numeric"> ответов «Верно»
+    </label>
+    <p class="note" id="mastery-note">Во всех вкладках, кроме «Настоящее · я»: каждое «Верно» добавляет форме единицу усвоения, «Повторить» — нет. Освоенная форма уходит в список «Освоено» и больше не выпадает.</p>
+
+    <h3>Перенос прогресса</h3>
+    <p class="note">Прогресс хранится только в этом браузере. Сохраните его в файл, чтобы перенести на другое устройство или не потерять при очистке браузера.</p>
+    <div class="row">
+      <button type="button" class="btn" id="export-btn">Сохранить в файл</button>
+      <button type="button" class="btn" id="import-btn">Загрузить из файла</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+    <div class="confirm-box" id="import-confirm" hidden>
+      <p id="import-summary"></p>
+      <button type="button" class="btn btn-know" id="import-yes">Заменить</button>
+      <button type="button" class="btn" id="import-no">Отмена</button>
+    </div>
+    <p class="status" id="settings-status" role="status"></p>
+    <p class="note" id="voice-note"></p>
+  </dialog>
+
+  <script src="verbs.js"></script>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

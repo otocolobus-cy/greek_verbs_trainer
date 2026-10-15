@@ -1,0 +1,331 @@
+/* Цвета — переменными: светлая тема по умолчанию, тёмная — по системе или вручную (data-theme) */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --text: #1c2330;
+  --muted: #5d6878;
+  --line: #dde2ea;
+  --accent: #2563eb;
+  --accent-soft: #e3ecfd;
+  --know: #15803d;
+  --know-soft: #e2f4e8;
+  --learn: #b45309;
+  --learn-soft: #fbf0df;
+  --skip: #6b7280;
+  --skip-soft: #eceef1;
+  --danger: #b91c1c;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 20px rgba(16, 24, 40, .07);
+  --radius: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b1f26;
+    --surface: #232831;
+    --surface-2: #2b313b;
+    --text: #d4d8de;
+    --muted: #9aa3af;
+    --line: #353c48;
+    --accent: #8eaae0;
+    --accent-soft: #2b3650;
+    --know: #86c09d;
+    --know-soft: #253a2e;
+    --learn: #d6ac70;
+    --learn-soft: #3a3224;
+    --skip: #a2a9b4;
+    --skip-soft: #2e333c;
+    --danger: #e09090;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .22);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1b1f26;
+  --surface: #232831;
+  --surface-2: #2b313b;
+  --text: #d4d8de;
+  --muted: #9aa3af;
+  --line: #353c48;
+  --accent: #8eaae0;
+  --accent-soft: #2b3650;
+  --know: #86c09d;
+  --know-soft: #253a2e;
+  --learn: #d6ac70;
+  --learn-soft: #3a3224;
+  --skip: #a2a9b4;
+  --skip-soft: #2e333c;
+  --danger: #e09090;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .22);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- шапка и вкладки ---------- */
+.top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  max-width: 760px; width: 100%; margin: 0 auto; padding: 16px 16px 8px;
+}
+.brand { font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 650; }
+.brand-mark {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 9px;
+  background: var(--accent); color: #fff; font-family: Georgia, serif; font-size: 1.2rem;
+}
+.top-actions { display: flex; gap: 6px; }
+.icon-btn {
+  display: inline-grid; place-items: center; min-width: 40px; height: 40px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer;
+  font-size: .9rem;
+}
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.tabs {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  max-width: 760px; width: 100%; margin: 0 auto; padding: 4px 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none; border: 0; background: none; cursor: pointer; padding: 10px 12px; border-radius: 10px 10px 0 0;
+  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+  font-size: .92rem;
+}
+.tab small { display: block; font-size: .72rem; opacity: .85; }
+/* заливка — только у вкладки, которая сейчас открыта */
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+/* вкладка-источник: из её «Знаю» собираются все остальные занятия — обведена рамкой по контуру вкладки,
+   а заливается, как любая другая, только когда открыта: иначе она выглядела бы активной всегда */
+.tab-source { box-shadow: inset 0 0 0 1px var(--accent); margin-right: 26px; position: relative; }
+/* стрелка к остальным вкладкам: слова идут отсюда туда */
+.tab-source::after {
+  content: "→"; position: absolute; right: -24px; top: 50%; transform: translateY(-50%);
+  width: 22px; text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: 400; opacity: .7; pointer-events: none;
+}
+.tab-count { font-variant-numeric: tabular-nums; }
+.tab:not([aria-disabled="true"]):hover { color: var(--text); }
+
+main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
+.panel { display: flex; flex-direction: column; gap: 14px; }
+
+.storage-warning {
+  background: var(--learn-soft); color: var(--learn); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px;
+  font-size: .9rem;
+}
+
+/* ---------- фильтры ---------- */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.levels, .dir { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.chip, .dir button {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px;
+  cursor: pointer; font-size: .92rem; min-height: 38px;
+}
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.chip[aria-pressed="true"]::before { content: "✓ "; }
+
+/* выпадающие списки «Уровень» и «Спряжение» */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; position: relative; }
+/* список привязан к ряду фильтров, а не к своей кнопке: у правой кнопки он иначе уезжал за край экрана */
+.ms { position: static; }
+.ms-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 7px 12px 7px 14px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; font-size: .92rem;
+}
+.ms-btn::after { content: ""; width: 7px; height: 7px; margin: -3px 0 0 4px; border: solid var(--muted); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+.ms-btn[aria-expanded="true"] { border-color: var(--accent); }
+.ms-label { color: var(--muted); }
+.ms-value { font-weight: 600; }
+.ms-pop {
+  position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; width: min(420px, 100%); box-sizing: border-box;
+  padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+}
+.ms-pop[hidden] { display: none; }
+.ms-item {
+  display: grid; grid-template-columns: auto 4.6em 1fr auto; align-items: center; gap: 8px;
+  padding: 7px 8px; border-radius: 8px; cursor: pointer; font-size: .92rem;
+}
+.ms-item:hover { background: var(--surface-2); }
+.ms-item input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
+.ms-item input:disabled { opacity: .55; }
+.ms-name { font-weight: 600; }
+.ms-hint { color: var(--muted); font-size: .84rem; line-height: 1.3; }
+.ms-count { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.ms-all { display: block; margin: 4px 8px 2px; font-size: .88rem; }
+.ms-all[hidden] { display: none; }
+.dir { background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+.dir button { border: 0; background: none; }
+.dir button[aria-checked="true"] { background: var(--surface); box-shadow: var(--shadow); font-weight: 600; }
+
+.counter { margin: 0; color: var(--muted); font-size: .9rem; text-align: center; }
+.counter b { color: var(--text); font-weight: 600; }
+
+/* ---------- карточка ---------- */
+.stage { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.card {
+  position: relative; width: 100%; min-height: 230px; padding: 32px 20px 40px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  display: grid; place-items: center; text-align: center; cursor: pointer; user-select: none;
+  transition: transform .18s ease, background .18s ease;
+}
+.card:active { transform: scale(.99); }
+.card.is-back { background: var(--surface); border-color: var(--accent); }
+.card.flip { animation: flip .26s ease; }
+@keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(80deg); } 100% { transform: rotateX(0); } }
+@media (prefers-reduced-motion: reduce) { .card.flip { animation: none; } }
+.card-word { font-size: clamp(1.7rem, 6vw, 2.5rem); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.card-word.is-ru { font-size: clamp(1.3rem, 4.6vw, 1.85rem); font-weight: 500; }
+.card-alt { margin-top: 10px; color: var(--muted); font-size: .95rem; }
+.card-meta { margin-top: 10px; display: flex; gap: 10px; justify-content: center; align-items: center; }
+.card-meta .conj { font-size: .8rem; color: var(--muted); }
+.card-meta .lvl {
+  display: inline-block; font-size: .75rem; font-weight: 600; letter-spacing: .03em; padding: 2px 8px;
+  border-radius: 999px; background: var(--surface-2); color: var(--muted);
+}
+.card-hint { position: absolute; bottom: 12px; left: 0; right: 0; font-size: .78rem; color: var(--muted); }
+.speak {
+  position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); cursor: pointer; display: grid; place-items: center;
+}
+.speak:hover { background: var(--surface-2); }
+.speak svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.speak-inline { position: static; display: inline-grid; width: 32px; height: 32px; vertical-align: middle; margin-left: 6px; }
+
+/* ---------- кнопки ответа ---------- */
+.actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.actions.two { grid-template-columns: repeat(2, 1fr); }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 16px;
+  cursor: pointer; font-weight: 600; min-height: 48px;
+}
+.btn:hover { background: var(--surface-2); }
+.btn-know { background: var(--know-soft); border-color: transparent; color: var(--know); }
+.btn-learn { background: var(--learn-soft); border-color: transparent; color: var(--learn); }
+.btn-skip { background: var(--skip-soft); border-color: transparent; color: var(--skip); }
+.btn-know:hover, .btn-learn:hover, .btn-skip:hover { filter: brightness(.97); }
+.btn-pass { width: 100%; color: var(--muted); }
+.btn-link {
+  border: 0; background: none; color: var(--accent); cursor: pointer; padding: 6px 8px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.btn-link.danger { color: var(--danger); }
+
+.example {
+  width: 100%; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px;
+}
+.example p { margin: 0; }
+.example-el { font-size: 1.08rem; }
+.example-ru { color: var(--muted); margin-top: 4px !important; }
+
+.empty {
+  text-align: center; padding: 40px 20px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); color: var(--muted);
+}
+.empty-title { font-size: 1.15rem; color: var(--text); font-weight: 600; margin-top: 0; }
+
+.foot {
+  max-width: 760px; width: 100%; margin: 0 auto; padding: 18px 16px 28px; color: var(--muted); font-size: .8rem;
+  text-align: center;
+}
+
+/* ---------- окно списков ---------- */
+.dialog {
+  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text);
+  box-shadow: var(--shadow);
+}
+.dialog::backdrop { background: rgba(10, 14, 20, .45); }
+.dialog > *:not(.dialog-head) { margin-left: 18px; margin-right: 18px; }
+.dialog-head {
+  display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 6px 18px;
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.dialog h2 { font-size: 1.1rem; margin: 0; }
+.dialog h3 { font-size: 1rem; margin-top: 22px; margin-bottom: 4px; }
+.list-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.list-tabs button {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  font-size: .88rem;
+}
+.list-tabs button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.badge { font-weight: 600; opacity: .8; }
+.search {
+  width: calc(100% - 36px); margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--text); font-size: 16px;
+}
+/* поиск и направление списка — одной строкой; на узком экране переключатель уходит вниз целиком */
+.list-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.list-row .search { flex: 1 1 200px; width: auto; margin-top: 0; }
+.dir-small button { min-height: 32px; padding: 4px 10px; font-size: .82rem; white-space: nowrap; }
+.dir-small { flex-wrap: nowrap; }
+/* высота постоянная: окно не прыгает при переходе между «Знаю», «Освоено» и «Не учим» */
+.list { list-style: none; padding: 0; margin-top: 8px; height: min(42vh, 360px); overflow-y: auto; border-top: 1px solid var(--line); }
+.list li { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); }
+.list .w { font-weight: 600; min-width: 0; }
+.list .t { color: var(--muted); font-size: .88rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .lvl { font-size: .72rem; color: var(--muted); }
+.list li .btn-link { flex: none; font-size: .88rem; }
+/* разделитель времён в «Освоено»: подзаголовок, а не строка списка */
+.list li.sep { position: sticky; top: 0; background: var(--surface); padding: 10px 2px 4px; font-size: .72rem;
+  font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+/* пустой список занимает то же место, что и полный */
+.list-empty { color: var(--muted); text-align: center; height: min(42vh, 360px); margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+.list-foot { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 6px; min-height: 36px; }
+.confirm { color: var(--danger); font-size: .9rem; }
+.note { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+/* раздел «Усвоение» в окне ⚙ */
+.switch-row, .goal-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer; }
+.switch-row input { width: 18px; height: 18px; accent-color: var(--accent); }
+.goal-row input {
+  width: 4em; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--text); font-size: 16px; text-align: center;
+}
+.goal-row.off { opacity: .5; cursor: default; }
+
+/* плашка после «Верно» — поверх строки счётчика: ничего не сдвигает и через пару секунд уходит */
+.counter-wrap { position: relative; }
+.toast {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; white-space: nowrap; margin: 0;
+  padding: 4px 14px; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: var(--shadow);
+  background: var(--know-soft); color: var(--know);
+}
+.toast.done { background: var(--accent-soft); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.confirm-box { margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 12px; }
+.confirm-box p { margin-top: 0; }
+.status { min-height: 1.5em; font-size: .9rem; margin-bottom: 0; }
+.status.ok { color: var(--know); }
+.status.err { color: var(--danger); }
+#voice-note { margin-bottom: 18px; }
+
+@media (max-width: 520px) {
+  .top { padding-top: 12px; }
+  .controls { justify-content: center; }
+  .card { min-height: 210px; }
+  .actions { gap: 8px; }
+  .btn { padding: 12px 8px; }
+  /* три вкладки списков — ровными колонками в один ряд, «Не учим» не уезжает на вторую строку */
+  .list-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+  .list-tabs button { padding: 6px 4px; white-space: nowrap; }
+  /* в одну строку перевод сжимался до нуля — на узком экране строка списка в два этажа */
+  .list li:not(.sep) { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "w t" "lvl back"; column-gap: 10px; row-gap: 2px; }
+  .list .w { grid-area: w; }
+  .list .t { grid-area: t; }
+  .list .lvl { grid-area: lvl; align-self: center; }
+  .list li .btn-link { grid-area: back; justify-self: end; }
+}
