@@ -518,7 +518,7 @@
   });
   document.addEventListener("keydown", (e) => {
     if (e.key !== " " && e.code !== "Space") return;
-    if ($("settings").open) return;
+    if ($("settings").open || $("help").open) return;
     if (filterOpen() || e.target.closest?.(".ms")) return; // пробел ставит галочку или открывает список
     const tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "textarea") return;
@@ -746,6 +746,10 @@
   });
   $("settings-close").addEventListener("click", () => $("settings").close());
   $("settings").addEventListener("click", (e) => { if (e.target === $("settings")) $("settings").close(); });
+
+  $("help-btn").addEventListener("click", () => $("help").showModal());
+  $("help-close").addEventListener("click", () => $("help").close());
+  $("help").addEventListener("click", (e) => { if (e.target === $("help")) $("help").close(); });
 
   /* ---------- усвоение ---------- */
   function renderMastery() {
