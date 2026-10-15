@@ -215,6 +215,7 @@
         P.settings[f.key] = cb.checked ? f.all.filter((y) => y === x || cur.includes(y)) : cur.filter((y) => y !== x);
         save();
         renderFilter(f);
+        renderCourse();
         restartDeck();
         pop.querySelectorAll("input")[f.all.indexOf(x)]?.focus();
       });
@@ -227,7 +228,7 @@
       hint.textContent = f.hints[x] || "";
       const n = document.createElement("span");
       n.className = "ms-count";
-      n.textContent = VERBS.filter((v) => f.of(v) === x).length;
+      n.textContent = VERBS.filter((v) => f.of(v) === x && inCourse(v)).length;
       row.append(cb, name, hint, n);
       pop.append(row);
     }
@@ -240,12 +241,36 @@
       P.settings[f.key] = f.all.slice();
       save();
       renderFilter(f);
+      renderCourse();
       restartDeck();
     });
     pop.append(all);
   }
   function renderLevels() {
     FILTERS.forEach(renderFilter);
+    renderCourse();
+  }
+
+  // Курс «Ελληνικά Τώρα 1+1» — набор, внутри которого действуют уровень и спряжение.
+  // Числа на половинках — сколько глаголов даст каждая при нынешних уровне и спряжении
+  const inCourse = (v) => !P.settings.textbook || !!v.textbook;
+  function renderCourse() {
+    const inFilters = VERBS.filter((v) => P.settings.levels.includes(v.level) && P.settings.types.includes(Core.typeOf(v)));
+    const n = { on: inFilters.filter((v) => v.textbook).length, off: inFilters.length };
+    for (const b of $("course").querySelectorAll("button")) {
+      const on = b.dataset.course === "on";
+      b.setAttribute("aria-checked", String(on === P.settings.textbook));
+      b.querySelector(".seg-n").textContent = `· ${n[b.dataset.course]}`;
+      b.onclick = () => {
+        if (P.settings.textbook === on) return;
+        P.settings.textbook = on;
+        save();
+        FILTERS.forEach(renderFilter); // числа в списках уровня и спряжения — внутри выбранного набора
+        renderCourse();
+        renderTabs();
+        restartDeck();
+      };
+    }
   }
   function openFilter(id) {
     for (const f of FILTERS) {
@@ -270,7 +295,7 @@
   });
   // Глагол попадает в колоду и в счётчик, только если подходят и уровень, и тип
   function inScope(v) {
-    return !!v && P.settings.levels.includes(v.level) && P.settings.types.includes(Core.typeOf(v));
+    return !!v && inCourse(v) && P.settings.levels.includes(v.level) && P.settings.types.includes(Core.typeOf(v));
   }
   function renderDir() {
     for (const b of $("dir").querySelectorAll("button")) {
@@ -339,7 +364,9 @@
     if (!formsMode()) {
       const v = byVerb.get(current);
       // у безличных (πρέπει) карточка спрашивает 3-е лицо — и пример берётся в нём же
-      return { v, gr: v.verb, ru: v.ru, person: Math.max(0, v.present.findIndex((f) => f)), tense: "present" };
+      // курс пишет иначе (φιλώ при нашем φιλάω) — показываем оба написания, ключ прогресса остаётся прежним
+      const gr = v.spelling ? `${v.verb} / ${v.spelling}` : v.verb;
+      return { v, gr, ru: v.ru, person: Math.max(0, v.present.findIndex((f) => f)), tense: "present" };
     }
     const f = Core.parseFormId(current);
     const v = byVerb.get(f.verb);

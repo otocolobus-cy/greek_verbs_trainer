@@ -108,7 +108,7 @@
       format: FORMAT,
       version: VERSION,
       settings: { levels: LEVELS.slice(), types: TYPES.slice(), dir: "gr-ru", theme: "auto", tab: "present1",
-                  mastery: true, masteryGoal: GOAL_DEFAULT },
+                  mastery: true, masteryGoal: GOAL_DEFAULT, textbook: true },
       known: { "gr-ru": [], "ru-gr": [] },
       skip: [],
       correct: { "gr-ru": {}, "ru-gr": {} },
@@ -136,6 +136,8 @@
     if (["auto", "light", "dark"].includes(s.theme)) p.settings.theme = s.theme;
     if (typeof s.tab === "string") p.settings.tab = s.tab;
     if (typeof s.mastery === "boolean") p.settings.mastery = s.mastery;
+    // режим курса «Ελληνικά Τώρα 1+1»: в старом прогрессе его нет — тогда включён, как у нового человека
+    if (typeof s.textbook === "boolean") p.settings.textbook = s.textbook;
     if (Number.isInteger(s.masteryGoal)) p.settings.masteryGoal = Math.min(GOAL_MAX, Math.max(GOAL_MIN, s.masteryGoal));
     const clean = (list) => {
       if (!Array.isArray(list)) return [];

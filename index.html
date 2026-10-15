@@ -38,6 +38,11 @@
     <section class="panel" id="panel-present1" role="tabpanel" aria-labelledby="tab-present1">
       <div class="controls">
         <div class="filters">
+          <!-- обе половинки подписаны числом: видно, что даст переключение, ещё до нажатия -->
+          <div class="dir" role="radiogroup" aria-label="Набор глаголов" id="course">
+            <button type="button" role="radio" data-course="on" title="Только глаголы, пройденные в курсе Ελληνικά Τώρα 1+1"><span lang="el">Ελληνικά Τώρα 1+1</span> <span class="seg-n"></span></button>
+            <button type="button" role="radio" data-course="off" title="Все глаголы словаря">Все <span class="seg-n"></span></button>
+          </div>
           <div class="ms" id="ms-levels">
             <button type="button" class="ms-btn" aria-haspopup="true" aria-expanded="false" aria-controls="levels">
               <span class="ms-label">Уровень</span> <span class="ms-value"></span>
@@ -190,6 +195,7 @@
 
     <h3>Фильтры</h3>
     <ul>
+      <li><b>Ελληνικά Τώρα 1+1 / Все</b> — только глаголы, пройденные в курсе, или весь словарь. Число — сколько глаголов даст каждый вариант. Уровень и спряжение действуют внутри выбранного.</li>
       <li><b>Уровень</b> — A1, A2, B1. Можно выбрать несколько.</li>
       <li><b>Спряжение</b> — группы спряжения (Α, Β1, Γ1…). «Особые» — глаголы вне этих групп.</li>
       <li><b>GR → RU / RU → GR</b> — направление перевода. Списки «Знаю» и «Освоено» у каждого направления свои.</li>
