@@ -67,7 +67,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -96,15 +96,55 @@ a { color: var(--accent); }
 .help-btn { margin-right: 6px; }
 .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
+/* Режим «По шагам / Всё сразу» — над вкладками: он решает, чем они наполняются */
+/* подсказка привязана к строке, а не к кнопке «?»: на телефоне кнопка по центру, и подсказка от неё вылезала за край */
+.flowbar {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  max-width: 760px; width: 100%; margin: 0 auto; padding: 4px 16px 6px; box-sizing: border-box;
+}
+.qtip { display: inline-flex; }
+/* От режима зависит логика всего тренажёра — он заметнее прочих переключателей: подложка, подпись,
+   крупнее кнопки и залитая выбранная половина */
+.flowbar::before {
+  content: ""; position: absolute; inset: 2px 12px 2px; z-index: -1;
+  background: var(--accent-soft); border-radius: 14px;
+}
+/* isolation держит подложку под кнопками, но запирает z-index подсказки внутри строки — поэтому сама строка
+   поднята над вкладками и фильтрами, иначе подсказка уходила под них */
+.flowbar { isolation: isolate; z-index: 25; padding: 8px 20px 10px; margin-bottom: 4px; }
+.flow-label { font-weight: 600; font-size: .95rem; color: var(--accent); }
+#flow { background: var(--surface); }
+#flow button { min-height: 36px; padding: 6px 16px; font-size: .95rem; }
+/* текст — цветом поверхности, а не белым: в тёмной теме акцент светлый, и белое на нём не читалось */
+#flow button[aria-checked="true"] { background: var(--accent); color: var(--surface); box-shadow: none; }
+.qmark {
+  width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+  color: var(--muted); font-size: .8rem; font-weight: 600; cursor: help; padding: 0; line-height: 1;
+}
+.qmark:hover, .qtip.open .qmark { color: var(--accent); border-color: var(--accent); }
+.tip {
+  display: none; position: absolute; z-index: 30; top: calc(100% + 2px); left: 16px;
+  width: min(360px, calc(100% - 32px)); box-sizing: border-box; padding: 10px 12px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); font-size: .86rem; line-height: 1.45;
+}
+.qtip:hover .tip, .qtip.open .tip, .qmark:focus-visible + .tip { display: block; }
+@media (max-width: 520px) {
+  .flowbar { justify-content: center; }
+  .tip { right: 16px; width: auto; }
+}
+
+/* Линия под вкладками — внутренняя тень, а не рамка: рамку подчёркивание активной вкладки перекрывало
+   через margin-bottom: -1px, этот пиксель вылезал за полосу, и на телефоне полоса ездила ещё и вверх-вниз */
 .tabs {
-  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
   max-width: 760px; width: 100%; margin: 0 auto; padding: 4px 16px 0;
-  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
   flex: none; border: 0; background: none; cursor: pointer; padding: 10px 12px; border-radius: 10px 10px 0 0;
-  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+  color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap;
   font-size: .92rem;
 }
 .tab small { display: block; font-size: .72rem; opacity: .85; }
@@ -113,11 +153,13 @@ a { color: var(--accent); }
 .tab[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 /* вкладка-источник: из её «Знаю» собираются все остальные занятия — обведена рамкой по контуру вкладки,
    а заливается, как любая другая, только когда открыта: иначе она выглядела бы активной всегда */
-.tab-source { box-shadow: inset 0 0 0 1px var(--accent); margin-right: 26px; position: relative; }
-/* стрелка к остальным вкладкам: слова идут отсюда туда */
+.tab-source { box-shadow: inset 0 0 0 1px var(--accent); margin-right: 34px; position: relative; }
+/* стрелка к остальным вкладкам: слова идут отсюда туда. В «По шагам» это главная подсказка, как открыть остальное, —
+   поэтому крупно и в полный цвет */
 .tab-source::after {
-  content: "→"; position: absolute; right: -24px; top: 50%; transform: translateY(-50%);
-  width: 22px; text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: 400; opacity: .7; pointer-events: none;
+  content: "→"; position: absolute; right: -32px; top: 50%; transform: translateY(-50%);
+  width: 30px; text-align: center; color: var(--accent); font-size: 1.6rem; font-weight: 700; line-height: 1;
+  pointer-events: none;
 }
 .tab-count { font-variant-numeric: tabular-nums; }
 .tab:not([aria-disabled="true"]):hover { color: var(--text); }
@@ -183,12 +225,15 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
   position: relative; width: 100%; min-height: 230px; padding: 32px 20px 40px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
   display: grid; place-items: center; text-align: center; cursor: pointer; user-select: none;
-  transition: transform .18s ease, background .18s ease;
+  transition: background .18s ease;
 }
-.card:active { transform: scale(.99); }
+/* Сжатие при нажатии — только для мыши: на телефоне оно накладывалось на переворот, и карточка дёргалась дважды */
+@media (hover: hover) { .card:active { transform: scale(.99); } }
 .card.is-back { background: var(--surface); border-color: var(--accent); }
-.card.flip { animation: flip .26s ease; }
-@keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(80deg); } 100% { transform: rotateX(0); } }
+/* Одно движение: новый текст уже на месте, карточка разворачивается к зрителю. Прежнее «завалиться и вернуться»
+   показывало новый текст на отворачивающейся карточке */
+.card.flip { animation: flip .22s ease-out; }
+@keyframes flip { from { transform: perspective(900px) rotateX(75deg); } to { transform: perspective(900px) rotateX(0); } }
 @media (prefers-reduced-motion: reduce) { .card.flip { animation: none; } }
 .card-word { font-size: clamp(1.7rem, 6vw, 2.5rem); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
 .card-word.is-ru { font-size: clamp(1.3rem, 4.6vw, 1.85rem); font-weight: 500; }
@@ -247,7 +292,9 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
 
 /* ---------- окно списков ---------- */
 .dialog {
-  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0;
+  width: min(640px, calc(100vw - 32px)); padding: 0;
+  /* dvh — видимая высота: 100vh на телефоне считает и место под адресной строкой, и шапка окна уходила под неё */
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text);
   box-shadow: var(--shadow);
 }
