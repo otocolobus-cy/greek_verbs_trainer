@@ -99,7 +99,9 @@
   }
 
   /* ---------- вкладки: отрисовка ---------- */
-  const isLocked = (t) => (t.needsKnown || !t.ready) && knownAny().size === 0;
+  // «Всё сразу»: вкладкам времён «Знаю» не нужно — они берут все глаголы под фильтрами
+  const allAtOnce = () => P.settings.flow === "all";
+  const isLocked = (t) => ((t.needsKnown && !allAtOnce()) || !t.ready) && knownAny().size === 0;
   // «все лица» работают с формами, первая вкладка — с глаголами
   const formsMode = () => !!(TABS.find((t) => t.id === P.settings.tab) || {}).tense;
 
@@ -119,8 +121,9 @@
         b.setAttribute("aria-disabled", "true");
         b.title = "Сначала отметьте хотя бы одно слово «Знаю» во вкладке «Настоящее · я»";
       }
-      // первая вкладка — источник: её «Знаю» наполняет все остальные упражнения
-      if (t.id === TABS[0].id) {
+      // первая вкладка — источник: её «Знаю» наполняет все остальные упражнения. В «Всё сразу» источника нет,
+      // и стрелка от неё врала бы
+      if (t.id === TABS[0].id && !allAtOnce()) {
         b.classList.add("tab-source");
         if (!locked) b.title = "Отсюда слова, отмеченные «Знаю», попадают во все остальные упражнения";
       }
@@ -297,6 +300,35 @@
   function inScope(v) {
     return !!v && inCourse(v) && P.settings.levels.includes(v.level) && P.settings.types.includes(Core.typeOf(v));
   }
+  function renderFlow() {
+    for (const b of $("flow").querySelectorAll("button")) {
+      b.setAttribute("aria-checked", String(b.dataset.flow === P.settings.flow));
+      b.onclick = () => {
+        if (P.settings.flow === b.dataset.flow) return;
+        P.settings.flow = b.dataset.flow;
+        save();
+        renderFlow();
+        selectTab(P.settings.tab); // вернувшись к «По шагам» без «Знаю», вкладка времён закрывается — уходим на первую
+        restartDeck();
+      };
+    }
+  }
+  // Подсказка «?»: наведение — для мыши, нажатие — для телефона (Safari не даёт кнопке фокус по касанию)
+  const flowHelp = $("flow-help");
+  flowHelp.querySelector(".qmark").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !flowHelp.classList.contains("open");
+    flowHelp.classList.toggle("open", open);
+    e.currentTarget.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", () => {
+    flowHelp.classList.remove("open");
+    flowHelp.querySelector(".qmark").setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") flowHelp.classList.remove("open");
+  });
+
   function renderDir() {
     for (const b of $("dir").querySelectorAll("button")) {
       b.setAttribute("aria-checked", String(b.dataset.dir === P.settings.dir));
@@ -330,13 +362,19 @@
     const known = new Set(P.known[P.settings.dir]);
     return VERBS.filter((v) => inScope(v) && known.has(v.verb));
   }
+  // Глаголы вкладок времён — одна точка на колоду, счётчики и объяснение пустой колоды
+  function formsPool() {
+    if (!allAtOnce()) return knownInScope();
+    const skip = new Set(P.skip);
+    return VERBS.filter((v) => inScope(v) && !skip.has(v.verb));
+  }
   const curTab = () => TABS.find((t) => t.id === P.settings.tab);
   // Усвоение выключено — в колоду идёт всё, включая освоенное: список «Освоено» тогда скрыт,
   // и спрятанное в нём иначе было бы не достать
   const isDone = (id, dir = P.settings.dir) => P.settings.mastery && Core.isMastered(P, dir, id);
   const masteredIds = (dir) => Object.keys(P.correct[dir]).filter((id) => Core.isMastered(P, dir, id));
   function eligibleFormsFor(tab) {
-    return knownInScope().flatMap((v) => formsOf(v, tab)).filter((id) => !isDone(id));
+    return formsPool().flatMap((v) => formsOf(v, tab)).filter((id) => !isDone(id));
   }
   const eligibleForms = () => eligibleFormsFor(curTab());
   const decks = { verbs: new Core.Deck(eligible), forms: new Core.Deck(eligibleForms) };
@@ -459,6 +497,8 @@
     $("card-speak").hidden = !(greekVoice && showGreek);
     $("actions").hidden = !(revealed && !forms);
     $("actions-forms").hidden = !(revealed && forms);
+    $("skip-form").hidden = !allAtOnce();
+    $("actions-forms").classList.toggle("two", !allAtOnce());
     $("pass-btn").hidden = revealed; // пропустить можно, только не заглянув в ответ
     $("example-btn").hidden = !(revealed && exampleNow());
   }
@@ -470,10 +510,13 @@
     if (!formsMode()) {
       title = "В выбранных уровнях карточек не осталось";
       text = "Всё разложено по спискам «Знаю» и «Не учим». Добавьте уровень или спряжение либо верните слова в обучение.";
-    } else if (!knownInScope().length) {
+    } else if (!formsPool().length && allAtOnce()) {
+      title = "В выбранных фильтрах нет глаголов";
+      text = "Добавьте уровень или спряжение, переключитесь на «Все» или верните слова из списка «Не учим».";
+    } else if (!formsPool().length) {
       title = `Нет слов из «Знаю ${dir}» в выбранных фильтрах`;
-      text = "Здесь тренируются только слова, отмеченные «Знаю» во вкладке «Настоящее · я» в этом же направлении. Отметьте слова там или добавьте уровень и спряжение.";
-    } else if (!knownInScope().some((v) => formsOf(v, curTab()).length)) {
+      text = "В режиме «По шагам» здесь тренируются только слова, отмеченные «Знаю» во вкладке «Настоящее · я» в этом же направлении. Отметьте слова там, добавьте уровень и спряжение или включите «Всё сразу».";
+    } else if (!formsPool().some((v) => formsOf(v, curTab()).length)) {
       title = "Для этих слов ещё нет русских форм";
       text = "Формы по лицам пока составлены для уровней A1 и A2. Добавьте эти уровни в фильтр.";
     } else {
@@ -505,7 +548,7 @@
       c.append(label + " ", b);
     };
     if (formsMode()) {
-      const verbs = knownInScope();
+      const verbs = formsPool();
       const all = verbs.flatMap((v) => formsOf(v, curTab()));
       if (P.settings.mastery) {
         part("Освоено", all.filter((id) => isDone(id)).length);
@@ -576,6 +619,15 @@
       save();
       showProgress(current, c[current]);
     }
+    // «Не учим» с карточки формы — про весь глагол: список глагольный и общий для направлений. Плашка называет
+    // глагол, иначе исчезновение всех его форм выглядело бы потерей
+    if (act === "skip") {
+      const verb = Core.parseFormId(current).verb;
+      if (!P.skip.includes(verb)) P.skip.push(verb);
+      save();
+      showToast(verb, " — в «Не учим»", false);
+      renderTabs();
+    }
     next();
   });
 
@@ -583,14 +635,17 @@
   let toastTimer = null;
   function showProgress(id, n) {
     const f = Core.parseFormId(id);
+    const goal = P.settings.masteryGoal;
+    showToast(byVerb.get(f.verb)[f.tense][f.person], n >= goal ? " — освоено" : ` · ${n} из ${goal}`, n >= goal);
+  }
+  function showToast(greek, rest, done) {
     const t = $("toast");
     t.textContent = "";
     const w = document.createElement("span");
     w.lang = "el";
-    w.textContent = byVerb.get(f.verb)[f.tense][f.person];
-    const goal = P.settings.masteryGoal;
-    t.append(w, n >= goal ? " — освоено" : ` · ${n} из ${goal}`);
-    t.classList.toggle("done", n >= goal);
+    w.textContent = greek;
+    t.append(w, rest);
+    t.classList.toggle("done", done);
     t.hidden = false;
     $("counter").style.visibility = "hidden"; // плашка на время заменяет строку счётчика, а не наползает на неё
     clearTimeout(toastTimer);
@@ -861,6 +916,7 @@
     applyTheme();
     renderLevels();
     renderDir();
+    renderFlow();
     renderMastery();
     renderList();
     renderTabs();
@@ -876,6 +932,7 @@
   applyTheme();
   renderLevels();
   renderDir();
+  renderFlow();
   save(); // заодно проверяем, работает ли хранилище
   selectTab(P.settings.tab);
   started = true;
