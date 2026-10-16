@@ -67,7 +67,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
-  min-height: 100vh;
+  min-height: 100vh; min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -96,15 +96,17 @@ a { color: var(--accent); }
 .help-btn { margin-right: 6px; }
 .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
+/* Линия под вкладками — внутренняя тень, а не рамка: рамку подчёркивание активной вкладки перекрывало
+   через margin-bottom: -1px, этот пиксель вылезал за полосу, и на телефоне полоса ездила ещё и вверх-вниз */
 .tabs {
-  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
   max-width: 760px; width: 100%; margin: 0 auto; padding: 4px 16px 0;
-  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
   flex: none; border: 0; background: none; cursor: pointer; padding: 10px 12px; border-radius: 10px 10px 0 0;
-  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+  color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap;
   font-size: .92rem;
 }
 .tab small { display: block; font-size: .72rem; opacity: .85; }
@@ -183,12 +185,15 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
   position: relative; width: 100%; min-height: 230px; padding: 32px 20px 40px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
   display: grid; place-items: center; text-align: center; cursor: pointer; user-select: none;
-  transition: transform .18s ease, background .18s ease;
+  transition: background .18s ease;
 }
-.card:active { transform: scale(.99); }
+/* Сжатие при нажатии — только для мыши: на телефоне оно накладывалось на переворот, и карточка дёргалась дважды */
+@media (hover: hover) { .card:active { transform: scale(.99); } }
 .card.is-back { background: var(--surface); border-color: var(--accent); }
-.card.flip { animation: flip .26s ease; }
-@keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(80deg); } 100% { transform: rotateX(0); } }
+/* Одно движение: новый текст уже на месте, карточка разворачивается к зрителю. Прежнее «завалиться и вернуться»
+   показывало новый текст на отворачивающейся карточке */
+.card.flip { animation: flip .22s ease-out; }
+@keyframes flip { from { transform: perspective(900px) rotateX(75deg); } to { transform: perspective(900px) rotateX(0); } }
 @media (prefers-reduced-motion: reduce) { .card.flip { animation: none; } }
 .card-word { font-size: clamp(1.7rem, 6vw, 2.5rem); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
 .card-word.is-ru { font-size: clamp(1.3rem, 4.6vw, 1.85rem); font-weight: 500; }
@@ -247,7 +252,9 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
 
 /* ---------- окно списков ---------- */
 .dialog {
-  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0;
+  width: min(640px, calc(100vw - 32px)); padding: 0;
+  /* dvh — видимая высота: 100vh на телефоне считает и место под адресной строкой, и шапка окна уходила под неё */
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text);
   box-shadow: var(--shadow);
 }
