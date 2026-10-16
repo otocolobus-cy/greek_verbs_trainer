@@ -368,7 +368,15 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
 
 @media (max-width: 520px) {
   .top { padding-top: 12px; }
-  .controls { justify-content: center; }
+  /* Фильтры — сеткой во всю ширину: курс и направление на всю строку с равными половинками, уровень и
+     спряжение пополам. По центру по отдельности блоки разной ширины стояли лесенкой */
+  .controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #course { grid-column: 1 / -1; }
+  #course, #dir { display: grid; grid-template-columns: 1fr 1fr; }
+  #course button, #dir button { text-align: center; }
+  .ms-btn { width: 100%; justify-content: space-between; }
+  .ms-btn .ms-label { margin-right: auto; }
   .card { min-height: 210px; }
   .actions { gap: 8px; }
   .btn { padding: 12px 8px; }
