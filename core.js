@@ -85,7 +85,6 @@
   const TYPES = ["Α", "ΑΒ", "Β1", "Β2", "Γ1", "Γ2", "Γ3", "Γ4", OTHER_TYPE];
   const typeOf = (v) => (TYPES.includes(v.type) ? v.type : OTHER_TYPE);
   const DIRS = ["gr-ru", "ru-gr"];
-  const FLOWS = ["steps", "all"]; // «По шагам» и «Всё сразу»
   const TENSES = ["present", "past", "future"];
 
   // Во вкладках форм учёт ведётся по отдельной форме, а не по глаголу: «present:γράφω:3» — «γράφουμε».
@@ -109,7 +108,7 @@
       format: FORMAT,
       version: VERSION,
       settings: { levels: LEVELS.slice(), types: TYPES.slice(), dir: "gr-ru", theme: "auto", tab: "present1",
-                  mastery: true, masteryGoal: GOAL_DEFAULT, textbook: true, flow: "steps" },
+                  mastery: true, masteryGoal: GOAL_DEFAULT, textbook: true },
       known: { "gr-ru": [], "ru-gr": [] },
       skip: [],
       correct: { "gr-ru": {}, "ru-gr": {} },
@@ -139,8 +138,6 @@
     if (typeof s.mastery === "boolean") p.settings.mastery = s.mastery;
     // режим курса «Ελληνικά Τώρα 1+1»: в старом прогрессе его нет — тогда включён, как у нового человека
     if (typeof s.textbook === "boolean") p.settings.textbook = s.textbook;
-    // «steps» — во вкладках времён только слова из «Знаю»; «all» — все глаголы под фильтрами
-    if (FLOWS.includes(s.flow)) p.settings.flow = s.flow;
     if (Number.isInteger(s.masteryGoal)) p.settings.masteryGoal = Math.min(GOAL_MAX, Math.max(GOAL_MIN, s.masteryGoal));
     const clean = (list) => {
       if (!Array.isArray(list)) return [];
@@ -189,6 +186,6 @@
   }
 
   return { randomInt, shuffle, Deck, emptyProgress, normalize, toExport, fromImport,
-           typeOf, OTHER_TYPE, STORAGE_KEY, LEVELS, TYPES, DIRS, FLOWS, TENSES, formId, parseFormId,
+           typeOf, OTHER_TYPE, STORAGE_KEY, LEVELS, TYPES, DIRS, TENSES, formId, parseFormId,
            isMastered, GOAL_MIN, GOAL_MAX, GOAL_DEFAULT };
 });
