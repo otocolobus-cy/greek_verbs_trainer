@@ -91,6 +91,12 @@
   const GREEK_ABC = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split("");
   const fold = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const letterOf = (word) => fold(word).charAt(0).toUpperCase();
+
+  // «γράφουν(ε)» — необязательное -ε, как пишут учебники (ставит сборка, scripts/forms.py). Для поиска это обе
+  // формы, для озвучки — короткая: скобку голос прочитал бы буквально
+  const OPT_E = "(ε)";
+  const formVariants = (f) => (!f ? [] : f.endsWith(OPT_E) ? [f.slice(0, -OPT_E.length), f.slice(0, -OPT_E.length) + "ε"] : [f]);
+  const speakable = (s) => String(s || "").split(OPT_E).join("");
   const TENSES = ["present", "past", "future"];
 
   // Во вкладках форм учёт ведётся по отдельной форме, а не по глаголу: «present:γράφω:3» — «γράφουμε».
@@ -195,5 +201,5 @@
 
   return { randomInt, shuffle, Deck, emptyProgress, normalize, toExport, fromImport,
            typeOf, OTHER_TYPE, STORAGE_KEY, LEVELS, TYPES, DIRS, FLOWS, TENSES, formId, parseFormId,
-           isMastered, GOAL_MIN, GOAL_MAX, GOAL_DEFAULT, GREEK_ABC, fold, letterOf };
+           isMastered, GOAL_MIN, GOAL_MAX, GOAL_DEFAULT, GREEK_ABC, fold, letterOf, formVariants, speakable };
 });

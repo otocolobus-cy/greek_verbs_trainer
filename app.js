@@ -94,7 +94,7 @@
   function speak(text) {
     if (!synth || !greekVoice || !text) return;
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(Core.speakable(text)); // «γράφουν(ε)» читается как «γράφουν»
     u.voice = greekVoice;
     u.lang = greekVoice.lang;
     u.rate = 0.9;
@@ -950,7 +950,7 @@
   // встретил «έγραψα» — найдёшь γράφω
   const refKey = new Map();
   for (const v of VERBS) {
-    const forms = Core.TENSES.flatMap((t) => v[t] || []).filter(Boolean);
+    const forms = Core.TENSES.flatMap((t) => v[t] || []).flatMap(Core.formVariants); // «γράφουνε» найдёт γράφω
     refKey.set(v.verb, Core.fold([v.verb, v.spelling, ...forms, v.ru].filter(Boolean).join(" ")));
   }
   let refVerb = null;  // открытый глагол; null — список
