@@ -841,6 +841,18 @@
   $("settings-close").addEventListener("click", () => $("settings").close());
   $("settings").addEventListener("click", (e) => { if (e.target === $("settings")) $("settings").close(); });
 
+  // Меню тренажёров под названием: открывается нажатием, закрывается щелчком мимо и Esc
+  function setApps(open) {
+    $("apps-menu").hidden = !open;
+    $("apps-btn").setAttribute("aria-expanded", String(open));
+  }
+  $("apps-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    setApps($("apps-menu").hidden);
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest("#apps-menu")) setApps(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setApps(false); });
+
   // Насколько свежий набор курса: дата берётся из course.js, который пишут сборка и робот курса.
   // Нет файла (старая выкладка) — строки нет, а не «дата неизвестна»
   const course = window.COURSE;

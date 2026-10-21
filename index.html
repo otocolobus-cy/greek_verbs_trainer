@@ -13,11 +13,24 @@
       if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
     } catch (e) {}
   </script>
-  <link rel="stylesheet" href="style.css?v=d21bd1b38a">
+  <link rel="stylesheet" href="style.css?v=d6daa83178">
 </head>
 <body>
   <header class="top">
-    <h1 class="brand"><span class="brand-mark" aria-hidden="true">α</span> Греческие глаголы</h1>
+    <!-- Название — меню тренажёров: ссылка на соседний сайт не занимает места ни в шапке, ни на телефоне -->
+    <div class="brand-wrap">
+      <h1 class="brand">
+        <button type="button" class="brand-btn" id="apps-btn" aria-haspopup="true" aria-expanded="false" aria-controls="apps-menu" title="Другие тренажёры">
+          <span class="brand-mark" aria-hidden="true">α</span>
+          <span class="brand-name">Греческие глаголы</span>
+          <span class="brand-caret" aria-hidden="true"></span>
+        </button>
+      </h1>
+      <ul class="apps-menu" id="apps-menu" hidden>
+        <li><span class="app-item app-cur" aria-current="page">Греческие глаголы</span></li>
+        <li><a class="app-item" href="https://otocolobus-cy.github.io/greek_numbers/">Греческие числа <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </div>
     <div class="top-actions">
       <!-- справочник — не упражнение, поэтому в шапке, а не в ряду вкладок -->
       <button class="icon-btn ref-btn" id="ref-btn" type="button" aria-pressed="false" aria-controls="panel-ref" title="Справочник глаголов: все формы и примеры">
@@ -288,6 +301,6 @@
   <script src="verbs.js?v=f4ebe476ca"></script>
   <script src="course.js?v=c5142d7748"></script>
   <script src="core.js?v=a2811a03a1"></script>
-  <script src="app.js?v=3ee00bff35"></script>
+  <script src="app.js?v=defaa36d08"></script>
 </body>
 </html>

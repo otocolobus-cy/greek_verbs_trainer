@@ -81,7 +81,30 @@ a { color: var(--accent); }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   max-width: 760px; width: 100%; margin: 0 auto; padding: 16px 16px 8px;
 }
-.brand { font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 650; }
+.brand { font-size: 1.15rem; margin: 0; font-weight: 650; }
+/* название — кнопка меню тренажёров; выглядит как заголовок, стрелка подсказывает, что оно раскрывается */
+.brand-wrap { position: relative; min-width: 0; }
+.brand-btn {
+  display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 4px; margin-left: -4px;
+  border: 0; border-radius: 12px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.brand-btn:hover, .brand-btn[aria-expanded="true"] { background: var(--surface-2); }
+.brand-caret {
+  flex: none; width: 7px; height: 7px; margin: -4px 0 0 2px;
+  border: solid var(--muted); border-width: 0 1.8px 1.8px 0; transform: rotate(45deg);
+}
+.apps-menu {
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: -4px; min-width: 230px; margin: 0; padding: 6px;
+  list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+}
+.apps-menu[hidden] { display: none; }
+.app-item {
+  display: flex; justify-content: space-between; gap: 12px; padding: 9px 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: .95rem; font-weight: 500;
+}
+a.app-item:hover { background: var(--surface-2); color: var(--accent); }
+.app-cur { color: var(--accent); font-weight: 650; }
+.app-cur::after { content: "✓"; }
 .brand-mark {
   display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 9px;
   background: var(--accent); color: #fff; font-family: Georgia, serif; font-size: 1.2rem;
@@ -404,7 +427,8 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
   .top-actions { gap: 4px; }
   .icon-btn { min-width: 36px; height: 36px; padding: 0 8px; }
   .ref-btn { margin-right: 6px; }
-  .brand { font-size: 1rem; gap: 8px; }
+  .brand { font-size: 1rem; }
+  .brand-btn { gap: 8px; }
 }
 .ref-scope { margin: 6px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--text); font-size: .85rem; }
 
