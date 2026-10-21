@@ -25,6 +25,9 @@
     { id: "past-all", title: "Аорист", sub: "все лица", ready: true, needsKnown: true, tense: "past" },
     { id: "future1", title: "Будущее простое", sub: "я", ready: true, needsKnown: true, tense: "future", first: true },
     { id: "future-all", title: "Будущее простое", sub: "все лица", ready: true, needsKnown: true, tense: "future" },
+    // справочник ничего не учит: ни колоды, ни счётчика, ни «Знаю». В ряд вкладок не рисуется — его кнопка в шапке
+    // (в ряду он перекрывал или выталкивал последнюю вкладку), но выбирается тем же selectTab
+    { id: "ref", title: "Справочник", sub: "", ready: true, ref: true },
   ];
 
   /* ---------- прогресс ---------- */
@@ -99,7 +102,10 @@
   }
 
   /* ---------- вкладки: отрисовка ---------- */
-  const isLocked = (t) => (t.needsKnown || !t.ready) && knownAny().size === 0;
+  let lastTab = TABS[0].id; // последнее упражнение — туда возвращает повторное нажатие на «Справочник»
+  // «Всё сразу»: вкладкам времён «Знаю» не нужно — они берут все глаголы под фильтрами
+  const allAtOnce = () => P.settings.flow === "all";
+  const isLocked = (t) => ((t.needsKnown && !allAtOnce()) || !t.ready) && knownAny().size === 0;
   // «все лица» работают с формами, первая вкладка — с глаголами
   const formsMode = () => !!(TABS.find((t) => t.id === P.settings.tab) || {}).tense;
 
@@ -107,6 +113,7 @@
     const nav = $("tabs");
     nav.textContent = "";
     for (const t of TABS) {
+      if (t.ref) continue;
       const b = document.createElement("button");
       b.type = "button";
       b.className = "tab";
@@ -119,8 +126,9 @@
         b.setAttribute("aria-disabled", "true");
         b.title = "Сначала отметьте хотя бы одно слово «Знаю» во вкладке «Настоящее · я»";
       }
-      // первая вкладка — источник: её «Знаю» наполняет все остальные упражнения
-      if (t.id === TABS[0].id) {
+      // первая вкладка — источник: её «Знаю» наполняет все остальные упражнения. В «Всё сразу» источника нет,
+      // и стрелка от неё врала бы
+      if (t.id === TABS[0].id && !allAtOnce()) {
         b.classList.add("tab-source");
         if (!locked) b.title = "Отсюда слова, отмеченные «Знаю», попадают во все остальные упражнения";
       }
@@ -154,15 +162,20 @@
     save();
     renderTabs();
     // рабочие вкладки делят одну панель: фильтры и направление общие, колода у каждой своя
-    $("panel-present1").hidden = !target.ready;
+    $("panel-present1").hidden = !target.ready || !!target.ref;
     $("panel-present1").setAttribute("aria-labelledby", "tab-" + target.id);
     $("panel-later").hidden = !!target.ready;
+    $("panel-ref").hidden = !target.ref;
+    $("ref-btn").setAttribute("aria-pressed", String(!!target.ref));
+    if (!target.ref) lastTab = target.id; // повторное нажатие на «Справочник» вернёт сюда
+    $("dir").hidden = !!target.ref; // направление справочнику ни к чему: он показывает обе стороны сразу
+    if (target.ref) renderRef();
     if (!target.ready) {
       $("later-title").textContent = `${target.title} · ${target.sub} — в разработке`;
       $("later-text").textContent =
         `Здесь будет тренажёр: ${target.about}. Он будет работать со словами из списка «Знаю» — сейчас их ${knownAny().size}.`;
     }
-    if (started && changed && target.ready) restartDeck();
+    if (started && changed && target.ready && !target.ref) restartDeck();
   }
 
   /* ---------- фильтры ---------- */
@@ -297,6 +310,35 @@
   function inScope(v) {
     return !!v && inCourse(v) && P.settings.levels.includes(v.level) && P.settings.types.includes(Core.typeOf(v));
   }
+  function renderFlow() {
+    for (const b of $("flow").querySelectorAll("button")) {
+      b.setAttribute("aria-checked", String(b.dataset.flow === P.settings.flow));
+      b.onclick = () => {
+        if (P.settings.flow === b.dataset.flow) return;
+        P.settings.flow = b.dataset.flow;
+        save();
+        renderFlow();
+        selectTab(P.settings.tab); // вернувшись к «По шагам» без «Знаю», вкладка времён закрывается — уходим на первую
+        restartDeck();
+      };
+    }
+  }
+  // Подсказка «?»: наведение — для мыши, нажатие — для телефона (Safari не даёт кнопке фокус по касанию)
+  const flowHelp = $("flow-help");
+  flowHelp.querySelector(".qmark").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !flowHelp.classList.contains("open");
+    flowHelp.classList.toggle("open", open);
+    e.currentTarget.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", () => {
+    flowHelp.classList.remove("open");
+    flowHelp.querySelector(".qmark").setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") flowHelp.classList.remove("open");
+  });
+
   function renderDir() {
     for (const b of $("dir").querySelectorAll("button")) {
       b.setAttribute("aria-checked", String(b.dataset.dir === P.settings.dir));
@@ -330,13 +372,19 @@
     const known = new Set(P.known[P.settings.dir]);
     return VERBS.filter((v) => inScope(v) && known.has(v.verb));
   }
+  // Глаголы вкладок времён — одна точка на колоду, счётчики и объяснение пустой колоды
+  function formsPool() {
+    if (!allAtOnce()) return knownInScope();
+    const skip = new Set(P.skip);
+    return VERBS.filter((v) => inScope(v) && !skip.has(v.verb));
+  }
   const curTab = () => TABS.find((t) => t.id === P.settings.tab);
   // Усвоение выключено — в колоду идёт всё, включая освоенное: список «Освоено» тогда скрыт,
   // и спрятанное в нём иначе было бы не достать
   const isDone = (id, dir = P.settings.dir) => P.settings.mastery && Core.isMastered(P, dir, id);
   const masteredIds = (dir) => Object.keys(P.correct[dir]).filter((id) => Core.isMastered(P, dir, id));
   function eligibleFormsFor(tab) {
-    return knownInScope().flatMap((v) => formsOf(v, tab)).filter((id) => !isDone(id));
+    return formsPool().flatMap((v) => formsOf(v, tab)).filter((id) => !isDone(id));
   }
   const eligibleForms = () => eligibleFormsFor(curTab());
   const decks = { verbs: new Core.Deck(eligible), forms: new Core.Deck(eligibleForms) };
@@ -345,7 +393,9 @@
   let flipped = false;
   let revealed = false; // ответ уже видели: кнопки под карточкой больше не прячутся до следующей карточки
 
+  // Все фильтры кончаются этим вызовом — поэтому через него же перерисовывается и справочник
   function restartDeck() {
+    if (curTab() && curTab().ref) return renderRef();
     deck().reset();
     next();
   }
@@ -459,6 +509,8 @@
     $("card-speak").hidden = !(greekVoice && showGreek);
     $("actions").hidden = !(revealed && !forms);
     $("actions-forms").hidden = !(revealed && forms);
+    $("skip-form").hidden = !allAtOnce();
+    $("actions-forms").classList.toggle("two", !allAtOnce());
     $("pass-btn").hidden = revealed; // пропустить можно, только не заглянув в ответ
     $("example-btn").hidden = !(revealed && exampleNow());
   }
@@ -470,10 +522,13 @@
     if (!formsMode()) {
       title = "В выбранных уровнях карточек не осталось";
       text = "Всё разложено по спискам «Знаю» и «Не учим». Добавьте уровень или спряжение либо верните слова в обучение.";
-    } else if (!knownInScope().length) {
+    } else if (!formsPool().length && allAtOnce()) {
+      title = "В выбранных фильтрах нет глаголов";
+      text = "Добавьте уровень или спряжение, переключитесь на «Все» или верните слова из списка «Не учим».";
+    } else if (!formsPool().length) {
       title = `Нет слов из «Знаю ${dir}» в выбранных фильтрах`;
-      text = "Здесь тренируются только слова, отмеченные «Знаю» во вкладке «Настоящее · я» в этом же направлении. Отметьте слова там или добавьте уровень и спряжение.";
-    } else if (!knownInScope().some((v) => formsOf(v, curTab()).length)) {
+      text = "В режиме «По шагам» здесь тренируются только слова, отмеченные «Знаю» во вкладке «Настоящее · я» в этом же направлении. Отметьте слова там, добавьте уровень и спряжение или включите «Всё сразу».";
+    } else if (!formsPool().some((v) => formsOf(v, curTab()).length)) {
       title = "Для этих слов ещё нет русских форм";
       text = "Формы по лицам пока составлены для уровней A1 и A2. Добавьте эти уровни в фильтр.";
     } else {
@@ -505,7 +560,7 @@
       c.append(label + " ", b);
     };
     if (formsMode()) {
-      const verbs = knownInScope();
+      const verbs = formsPool();
       const all = verbs.flatMap((v) => formsOf(v, curTab()));
       if (P.settings.mastery) {
         part("Освоено", all.filter((id) => isDone(id)).length);
@@ -576,6 +631,15 @@
       save();
       showProgress(current, c[current]);
     }
+    // «Не учим» с карточки формы — про весь глагол: список глагольный и общий для направлений. Плашка называет
+    // глагол, иначе исчезновение всех его форм выглядело бы потерей
+    if (act === "skip") {
+      const verb = Core.parseFormId(current).verb;
+      if (!P.skip.includes(verb)) P.skip.push(verb);
+      save();
+      showToast(verb, " — в «Не учим»", false);
+      renderTabs();
+    }
     next();
   });
 
@@ -583,14 +647,17 @@
   let toastTimer = null;
   function showProgress(id, n) {
     const f = Core.parseFormId(id);
+    const goal = P.settings.masteryGoal;
+    showToast(byVerb.get(f.verb)[f.tense][f.person], n >= goal ? " — освоено" : ` · ${n} из ${goal}`, n >= goal);
+  }
+  function showToast(greek, rest, done) {
     const t = $("toast");
     t.textContent = "";
     const w = document.createElement("span");
     w.lang = "el";
-    w.textContent = byVerb.get(f.verb)[f.tense][f.person];
-    const goal = P.settings.masteryGoal;
-    t.append(w, n >= goal ? " — освоено" : ` · ${n} из ${goal}`);
-    t.classList.toggle("done", n >= goal);
+    w.textContent = greek;
+    t.append(w, rest);
+    t.classList.toggle("done", done);
     t.hidden = false;
     $("counter").style.visibility = "hidden"; // плашка на время заменяет строку счётчика, а не наползает на неё
     clearTimeout(toastTimer);
@@ -774,6 +841,14 @@
   $("settings-close").addEventListener("click", () => $("settings").close());
   $("settings").addEventListener("click", (e) => { if (e.target === $("settings")) $("settings").close(); });
 
+  // Насколько свежий набор курса: дата берётся из course.js, который пишут сборка и робот курса.
+  // Нет файла (старая выкладка) — строки нет, а не «дата неизвестна»
+  const course = window.COURSE;
+  if (course && /^\d{4}-\d{2}-\d{2}$/.test(course.updated || "")) {
+    const [y, m, d] = course.updated.split("-");
+    $("course-note").textContent = `Набор «Ελληνικά Τώρα 1+1» — по сайту курса от ${d}.${m}.${y}, глаголов: ${course.verbs}.`;
+    $("course-note").hidden = false;
+  }
   $("help-btn").addEventListener("click", () => $("help").showModal());
   $("help-close").addEventListener("click", () => $("help").close());
   $("help").addEventListener("click", (e) => { if (e.target === $("help")) $("help").close(); });
@@ -861,12 +936,196 @@
     applyTheme();
     renderLevels();
     renderDir();
+    renderFlow();
     renderMastery();
     renderList();
     renderTabs();
     restartDeck();
     status("Прогресс загружен.", true);
   });
+
+  /* ---------- справочник ---------- */
+  // Список — глаголы под теми же фильтрами, что и карточки (курс, уровень, спряжение). «Не учим» справочник
+  // не прячет: это словарь, а не колода. Поиск — по самому глаголу, написанию курса, любой форме и переводу:
+  // встретил «έγραψα» — найдёшь γράφω
+  const refKey = new Map();
+  for (const v of VERBS) {
+    const forms = Core.TENSES.flatMap((t) => v[t] || []).filter(Boolean);
+    refKey.set(v.verb, Core.fold([v.verb, v.spelling, ...forms, v.ru].filter(Boolean).join(" ")));
+  }
+  let refVerb = null;  // открытый глагол; null — список
+  $("ref-btn").addEventListener("click", () => selectTab(curTab().ref ? lastTab : "ref"));
+
+  // Какие фильтры действуют — словами, из тех же настроек, что отбирают глаголы: иначе из списка не понять,
+  // почему в нём 77, а не 722
+  function refScopeText() {
+    const s = P.settings;
+    const lv = s.levels.length === Core.LEVELS.length ? "все уровни" : s.levels.join(", ");
+    const tp = s.types.length === Core.TYPES.length ? "все спряжения"
+      : s.types.length <= 3 ? `спряжение ${s.types.join(", ")}` : `${s.types.length} из ${Core.TYPES.length} спряжений`;
+    return `Показаны глаголы под фильтрами: ${s.textbook ? "Ελληνικά Τώρα 1+1" : "весь словарь"} · ${lv} · ${tp}`;
+  }
+  let refScroll = 0;   // где был список: «назад» возвращает туда же, а не в начало алфавита
+  const refName = (v) => (v.spelling ? `${v.verb} / ${v.spelling}` : v.verb);
+  const el = (tag, cls, text, lang) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    if (lang) n.lang = lang;
+    return n;
+  };
+
+  function renderRef() {
+    hideRefTip();
+    const v = refVerb && byVerb.get(refVerb);
+    $("ref-list-view").hidden = !!v;
+    $("ref-verb").hidden = !v;
+    if (v) renderRefVerb(v);
+    else renderRefList();
+  }
+
+  function renderRefList() {
+    const q = Core.fold($("ref-search").value.trim());
+    const all = VERBS.filter(inScope).sort((a, b) => Core.fold(a.verb).localeCompare(Core.fold(b.verb), "el"));
+    const shown = q ? all.filter((v) => refKey.get(v.verb).includes(q)) : all;
+    $("ref-scope").textContent = refScopeText();
+    $("ref-count").textContent = q ? `Найдено: ${shown.length} из ${all.length}` : `Глаголов: ${all.length}`;
+    const ul = $("ref-list");
+    ul.textContent = "";
+    const letters = new Set();
+    for (const v of shown) {
+      const L = Core.letterOf(v.verb);
+      if (!letters.has(L)) {
+        const sep = el("li", "sep", L);
+        sep.id = "ref-L-" + L;
+        ul.append(sep);
+        letters.add(L);
+      }
+      const b = el("button", "ref-row");
+      b.type = "button";
+      b.append(el("span", "w", refName(v), "el"), el("span", "t", v.ru || ""), el("span", "lvl", v.level));
+      b.addEventListener("click", () => openRefVerb(v.verb));
+      const li = el("li");
+      li.append(b);
+      ul.append(li);
+    }
+    if (!shown.length) {
+      ul.append(el("li", "ref-empty", all.length
+        ? "Ничего не нашлось. Поиск идёт по глаголу, любой его форме и переводу."
+        : "Под выбранными фильтрами глаголов нет. Добавьте уровень или спряжение либо переключитесь на «Все»."));
+    }
+    // буквы без глаголов не прячутся, а гаснут: алфавит остаётся на месте и читается как алфавит
+    const abc = $("ref-abc");
+    abc.textContent = "";
+    for (const L of Core.GREEK_ABC) {
+      const b = el("button", null, L);
+      b.type = "button";
+      b.disabled = !letters.has(L);
+      b.setAttribute("aria-label", `Буква ${L}`);
+      b.addEventListener("click", () => document.getElementById("ref-L-" + L)?.scrollIntoView({ block: "start" }));
+      abc.append(b);
+    }
+  }
+
+  function renderRefVerb(v) {
+    $("ref-title").textContent = refName(v);
+    $("ref-ru").textContent = v.ru || "";
+    $("ref-meta").textContent = [v.level, `спряжение ${Core.typeOf(v)}`,
+      v.textbook ? `Ελληνικά Τώρα${v.textbook === true ? "" : `, урок ${v.textbook}`}` : null].filter(Boolean).join(" · ");
+    $("ref-speak").hidden = !greekVoice;
+    const box = $("ref-tables");
+    box.textContent = "";
+    for (const t of Core.TENSES) {
+      if (!(v[t] || []).some(Boolean)) continue;
+      const sec = el("section", "ref-tense");
+      sec.append(el("h3", null, TENSE_TITLES[t]));
+      const table = el("table");
+      for (let p = 0; p < 6; p++) {
+        const form = v[t][p];
+        if (!form) continue; // у безличных (πρέπει) только 3-е лицо — пустые строки читались бы как пропуск
+        const tr = el("tr");
+        tr.append(el("td", "pron", GR_PRON[p], "el"));
+        const td = el("td", "form");
+        const ex = (v.examples[t] || []).find((e) => e.person === p);
+        if (ex) {
+          const b = el("button", "ref-form", form, "el");
+          b.type = "button";
+          b.setAttribute("aria-label", `${form} — показать пример`);
+          b.addEventListener("click", (e) => { e.stopPropagation(); showRefTip(b, ex); });
+          td.append(b);
+        } else {
+          td.append(el("span", null, form, "el"));
+        }
+        // перевод дважды: колонкой на широком экране и строкой под формой на телефоне — колонке там не хватало
+        // места, и длинная форма («θα καταλάβουμε») наезжала на перевод
+        const ru = (v["ru_" + t] || [])[p] || "";
+        if (ru) td.append(el("span", "ru-inline", ru));
+        tr.append(td, el("td", "ru", ru));
+        table.append(tr);
+      }
+      sec.append(table);
+      box.append(sec);
+    }
+  }
+
+  function openRefVerb(verb) {
+    refScroll = window.scrollY;
+    refVerb = verb;
+    // на телефоне «назад» — жест или кнопка системы: без своей записи в истории он уводил бы со страницы
+    history.pushState({ ref: verb }, "");
+    renderRef();
+    $("panel-ref").scrollIntoView({ block: "start" });
+  }
+  function closeRefVerb() {
+    refVerb = null;
+    renderRef();
+    window.scrollTo(0, refScroll);
+  }
+  $("ref-back").addEventListener("click", () => {
+    if (history.state && history.state.ref) history.back(); // закроет popstate — одна дорога для кнопки и жеста
+    else closeRefVerb();
+  });
+  // «назад» / «вперёд» показывают то, что записано в истории: глагол или список
+  window.addEventListener("popstate", (e) => {
+    const want = e.state && e.state.ref;
+    if (want && byVerb.has(want)) {
+      refVerb = want;
+      renderRef();
+    } else if (refVerb) {
+      closeRefVerb();
+    }
+  });
+  // после перезагрузки справочник открывается списком — запись «открыт глагол» от прошлого раза уже неправда
+  if (history.state && history.state.ref) history.replaceState(null, "");
+  $("ref-search").addEventListener("input", renderRefList);
+  $("ref-speak").addEventListener("click", () => refVerb && speak(refVerb));
+
+  // Подсказка с примером: по нажатию (на телефоне наведения нет), под формой и в пределах панели
+  let refTipEx = null;
+  function showRefTip(anchor, ex) {
+    const tip = $("ref-tip");
+    refTipEx = ex;
+    $("ref-tip-el").textContent = ex.el;
+    $("ref-tip-ru").textContent = ex.ru;
+    $("ref-tip-speak").hidden = !greekVoice;
+    tip.hidden = false;
+    const panel = $("panel-ref").getBoundingClientRect();
+    const a = anchor.getBoundingClientRect();
+    tip.style.top = `${a.bottom - panel.top + 6}px`;
+    tip.style.left = `${Math.max(0, Math.min(a.left - panel.left, panel.width - tip.offsetWidth))}px`;
+  }
+  function hideRefTip() {
+    $("ref-tip").hidden = true;
+    refTipEx = null;
+  }
+  $("ref-tip-speak").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (refTipEx) speak(refTipEx.el);
+  });
+  document.addEventListener("click", (e) => {
+    if (!$("ref-tip").hidden && !e.target.closest("#ref-tip")) hideRefTip();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideRefTip(); });
 
   /* ---------- старт ---------- */
   if (!VERBS.length) {
@@ -876,6 +1135,7 @@
   applyTheme();
   renderLevels();
   renderDir();
+  renderFlow();
   save(); // заодно проверяем, работает ли хранилище
   selectTab(P.settings.tab);
   started = true;

@@ -19,13 +19,36 @@
   <header class="top">
     <h1 class="brand"><span class="brand-mark" aria-hidden="true">α</span> Греческие глаголы</h1>
     <div class="top-actions">
-      <button class="icon-btn help-btn" id="help-btn" type="button" aria-haspopup="dialog">Помощь</button>
+      <!-- справочник — не упражнение, поэтому в шапке, а не в ряду вкладок -->
+      <button class="icon-btn ref-btn" id="ref-btn" type="button" aria-pressed="false" aria-controls="panel-ref" title="Справочник глаголов: все формы и примеры">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 7h8M8 10.5h6"/></svg>
+        <span class="ref-btn-label">Справочник</span>
+      </button>
       <button class="icon-btn" id="theme-btn" type="button" aria-label="Тема оформления"></button>
       <button class="icon-btn" id="settings-btn" type="button" aria-label="Списки и прогресс" title="Списки и прогресс">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
       </button>
+      <button class="icon-btn" id="help-btn" type="button" aria-haspopup="dialog" aria-label="Помощь" title="Помощь">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.5-2.7 4.1"/><path d="M12 17.6v.1"/></svg>
+      </button>
     </div>
   </header>
+
+  <!-- Режим управляет вкладками, а не карточкой, поэтому стоит над ними -->
+  <div class="flowbar">
+    <span class="flow-label" aria-hidden="true">Режим</span>
+    <div class="dir" role="radiogroup" aria-label="Режим: какие глаголы во вкладках времён" id="flow">
+      <button type="button" role="radio" data-flow="steps">По шагам</button>
+      <button type="button" role="radio" data-flow="all">Всё сразу</button>
+    </div>
+    <span class="qtip" id="flow-help">
+      <button type="button" class="qmark" aria-label="Как работают режимы" aria-describedby="flow-tip" aria-expanded="false">?</button>
+      <span class="tip" role="tooltip" id="flow-tip">
+        <b>По шагам</b> — сначала отметьте слова «Знаю» во вкладке «Настоящее · я». Только после этого откроются остальные вкладки, и в них будут формы лишь этих слов (в том же направлении).<br>
+        <b>Всё сразу</b> — во вкладках времён все глаголы, подходящие под фильтры (курс, уровень, спряжение), кроме «Не учим». Список «Знаю» не нужен и не меняется.
+      </span>
+    </span>
+  </div>
 
   <nav class="tabs" role="tablist" aria-label="Режимы тренажёра" id="tabs"></nav>
 
@@ -34,9 +57,8 @@
       Браузер не даёт сохранять прогресс — после закрытия страницы он пропадёт. Сохраните его в файл через ⚙.
     </div>
 
-    <!-- Вкладка 1: настоящее время, 1-е лицо — сам словарь глаголов -->
-    <section class="panel" id="panel-present1" role="tabpanel" aria-labelledby="tab-present1">
-      <div class="controls">
+    <!-- Фильтры общие: действуют и на карточки, и на справочник -->
+      <div class="controls" id="controls">
         <div class="filters">
           <!-- обе половинки подписаны числом: видно, что даст переключение, ещё до нажатия -->
           <div class="dir" role="radiogroup" aria-label="Набор глаголов" id="course">
@@ -61,6 +83,9 @@
           <button type="button" role="radio" data-dir="ru-gr">RU → GR</button>
         </div>
       </div>
+
+    <!-- Вкладки с карточками: настоящее «я» — сам словарь глаголов, остальные — формы -->
+    <section class="panel" id="panel-present1" role="tabpanel" aria-labelledby="tab-present1">
 
       <!-- плашка после «Верно» ложится поверх строки счётчика, по её центру -->
       <div class="counter-wrap">
@@ -89,6 +114,8 @@
         <div class="actions two" id="actions-forms" hidden>
           <button type="button" class="btn btn-know" data-act="master">Верно</button>
           <button type="button" class="btn btn-learn" data-act="again">Повторить</button>
+          <!-- только в «Всё сразу»: глаголы туда приходят сами, и отказаться от глагола нужно прямо с карточки -->
+          <button type="button" class="btn btn-skip" data-act="skip" id="skip-form" hidden title="Весь глагол уйдёт в список «Не учим» — из всех вкладок">Не учим</button>
         </div>
         <button type="button" class="btn btn-pass" id="pass-btn">Пропустить</button>
         <button type="button" class="btn-link" id="example-btn" hidden>Пример</button>
@@ -106,6 +133,41 @@
         <p class="empty-title" id="empty-title"></p>
         <p id="empty-text"></p>
         <button type="button" class="btn" id="empty-open">Открыть списки</button>
+      </div>
+    </section>
+
+    <!-- Справочник: список глаголов под фильтрами → все формы одного глагола -->
+    <section class="panel" id="panel-ref" aria-labelledby="ref-btn" hidden>
+      <div id="ref-list-view">
+        <div class="ref-bar">
+          <input class="search" id="ref-search" type="search" placeholder="Поиск: глагол, любая его форма или перевод" autocomplete="off" aria-label="Поиск по справочнику">
+          <nav class="ref-abc" id="ref-abc" aria-label="Алфавитный указатель"></nav>
+        </div>
+        <p class="ref-scope" id="ref-scope"></p>
+        <p class="ref-count" id="ref-count" aria-live="polite"></p>
+        <ul class="ref-list" id="ref-list"></ul>
+      </div>
+      <div id="ref-verb" hidden>
+        <button type="button" class="btn-link ref-back" id="ref-back">← Все глаголы</button>
+        <div class="ref-head">
+          <h2 class="ref-title"><span id="ref-title" lang="el"></span>
+            <button class="speak speak-inline" id="ref-speak" type="button" aria-label="Произнести" title="Произнести" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </button>
+          </h2>
+          <p class="ref-ru" id="ref-ru"></p>
+          <p class="ref-meta" id="ref-meta"></p>
+          <p class="note">Формы с пунктиром — с примером: нажмите на форму.</p>
+        </div>
+        <div class="ref-tables" id="ref-tables"></div>
+      </div>
+      <div class="ref-tip" id="ref-tip" role="tooltip" hidden>
+        <p class="ref-tip-el"><span id="ref-tip-el" lang="el"></span>
+          <button class="speak speak-inline" id="ref-tip-speak" type="button" aria-label="Произнести пример" title="Произнести" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+          </button>
+        </p>
+        <p class="ref-tip-ru" id="ref-tip-ru"></p>
       </div>
     </section>
 
@@ -189,8 +251,9 @@
     <h3>Вкладки</h3>
     <ul>
       <li><b>Настоящее · я</b> — словарь: глагол в 1-м лице настоящего времени. С неё всё начинается.</li>
-      <li><b>Остальные вкладки</b> (все лица, аорист, будущее) берут только глаголы из списка «Знаю» того же направления.</li>
+      <li><b>По шагам / Всё сразу</b> (над вкладками) — откуда берут глаголы вкладки времён. «По шагам» — только из списка «Знаю» того же направления. «Всё сразу» — все глаголы под фильтрами, кроме «Не учим».</li>
       <li>Число на вкладке — сколько карточек в ней осталось.</li>
+      <li><b>📖 Справочник</b> (кнопка в шапке; повторное нажатие — обратно к упражнению) — все глаголы под фильтрами, поиск и алфавит. Нажмите на глагол — все его формы по временам; нажмите на форму с пунктиром — пример.</li>
     </ul>
 
     <h3>Фильтры</h3>
@@ -202,12 +265,14 @@
       <li>Формы по лицам, аорист и будущее есть для A1 и A2.</li>
     </ul>
 
+    <p class="note" id="course-note" hidden></p>
+
     <h3>Карточка</h3>
     <ul>
       <li>Щелчок по карточке или пробел — перевернуть.</li>
       <li><b>Пропустить</b> (до переворота) — карточка вернётся в следующем круге.</li>
       <li>«Настоящее · я»: <b>Знаю</b> — в список «Знаю», <b>Повторить</b> — оставить в колоде, <b>Не учим</b> — убрать из колоды в обоих направлениях.</li>
-      <li>Остальные вкладки: <b>Верно</b> засчитывает форме ответ, <b>Повторить</b> — нет. Набрала форма нужное число «Верно» — она освоена и больше не выпадает.</li>
+      <li>Остальные вкладки: <b>Верно</b> засчитывает форме ответ, <b>Повторить</b> — нет. Набрала форма нужное число «Верно» — она освоена и больше не выпадает. В режиме «Всё сразу» есть и <b>Не учим</b>: весь глагол уходит в этот список и пропадает из всех вкладок.</li>
       <li><b>Пример</b> — фраза с этой формой. 🔊 — произнести (если в системе есть греческий голос).</li>
     </ul>
 
@@ -221,6 +286,7 @@
   </dialog>
 
   <script src="verbs.js"></script>
+  <script src="course.js"></script>
   <script src="core.js"></script>
   <script src="app.js"></script>
 </body>
