@@ -856,10 +856,20 @@
   // Насколько свежий набор курса: дата берётся из course.js, который пишут сборка и робот курса.
   // Нет файла (старая выкладка) — строки нет, а не «дата неизвестна»
   const course = window.COURSE;
-  if (course && /^\d{4}-\d{2}-\d{2}$/.test(course.updated || "")) {
-    const [y, m, d] = course.updated.split("-");
-    $("course-note").textContent = `Набор «Ελληνικά Τώρα 1+1» — по сайту курса от ${d}.${m}.${y}, глаголов: ${course.verbs}.`;
+  const ruDate = (iso) => (/^\d{4}-\d{2}-\d{2}$/.test(iso || "") ? iso.split("-").reverse().join(".") : null);
+  const courseDate = course && ruDate(course.updated);
+  if (courseDate) {
+    $("course-note").textContent = `Набор «Ελληνικά Τώρα 1+1» — по сайту курса от ${courseDate}, глаголов: ${course.verbs}.`;
     $("course-note").hidden = false;
+  }
+  // В подвале — когда сайт выложен в последний раз (дату ставит робот публикации, только при настоящих
+  // изменениях) и от какой даты набор курса. Открыли с диска — даты выкладки нет, её часть просто не пишем
+  const published = ruDate(document.querySelector('meta[name="published"]')?.content);
+  const updated = [published && `Сайт обновлён ${published}`, courseDate && `набор курса от ${courseDate}`].filter(Boolean);
+  if (updated.length) {
+    const text = updated.join(" · ");
+    $("updated-note").textContent = text[0].toUpperCase() + text.slice(1);
+    $("updated-note").hidden = false;
   }
   $("help-btn").addEventListener("click", () => $("help").showModal());
   $("help-close").addEventListener("click", () => $("help").close());

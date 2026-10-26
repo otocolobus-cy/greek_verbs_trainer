@@ -518,3 +518,7 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
 }
 .search-clear:hover { background: var(--surface-2); color: var(--text); }
 .search-clear[hidden] { display: none; } /* у кнопки свой display — правило браузера для hidden его не перебивает */
+
+/* дата выкладки и набора курса — своей строкой под источниками */
+.foot-updated { display: block; margin-top: 6px; }
+.foot-updated[hidden] { display: none; }

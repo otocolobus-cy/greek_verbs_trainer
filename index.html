@@ -13,7 +13,9 @@
       if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
     } catch (e) {}
   </script>
-  <link rel="stylesheet" href="style.css?v=216c443603">
+  <!-- дату выкладки вписывает робот публикации (.github/workflows/publish.yml), только когда сайт правда изменился -->
+  <meta name="published" content="2026-10-26">
+  <link rel="stylesheet" href="style.css?v=6d5d17ba02">
 </head>
 <body>
   <header class="top">
@@ -201,6 +203,7 @@
     Формы глаголов — <a href="https://en.wiktionary.org/" target="_blank" rel="noopener">Викисловарь</a> (CC BY-SA 4.0),
     примеры — <a href="https://tatoeba.org/" target="_blank" rel="noopener">Tatoeba</a> (CC BY 2.0 FR).
     Часть переводов и примеров составлена с помощью Claude.
+    <span class="foot-updated" id="updated-note" hidden></span>
   </footer>
 
   <!-- Списки и перенос прогресса -->
@@ -305,6 +308,6 @@
   <script src="verbs.js?v=2902f244a3"></script>
   <script src="course.js?v=7af28b2d00"></script>
   <script src="core.js?v=a2811a03a1"></script>
-  <script src="app.js?v=1491a4c231"></script>
+  <script src="app.js?v=4fa5c02ca0"></script>
 </body>
 </html>
