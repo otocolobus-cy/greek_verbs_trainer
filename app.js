@@ -1109,7 +1109,15 @@
   });
   // после перезагрузки справочник открывается списком — запись «открыт глагол» от прошлого раза уже неправда
   if (history.state && history.state.ref) history.replaceState(null, "");
-  $("ref-search").addEventListener("input", renderRefList);
+  // крестик виден, пока в поле есть хоть один символ; нажатие — пустое поле, полный список, курсор остаётся в поле
+  const syncRefClear = () => { $("ref-search-clear").hidden = !$("ref-search").value; };
+  $("ref-search").addEventListener("input", () => { syncRefClear(); renderRefList(); });
+  $("ref-search-clear").addEventListener("click", () => {
+    $("ref-search").value = "";
+    syncRefClear();
+    renderRefList();
+    $("ref-search").focus();
+  });
   $("ref-speak").addEventListener("click", () => refVerb && speak(refVerb));
 
   // Подсказка с примером: по нажатию (на телефоне наведения нет), под формой и в пределах панели

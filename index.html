@@ -13,7 +13,7 @@
       if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
     } catch (e) {}
   </script>
-  <link rel="stylesheet" href="style.css?v=d6daa83178">
+  <link rel="stylesheet" href="style.css?v=216c443603">
 </head>
 <body>
   <header class="top">
@@ -153,7 +153,11 @@
     <section class="panel" id="panel-ref" aria-labelledby="ref-btn" hidden>
       <div id="ref-list-view">
         <div class="ref-bar">
-          <input class="search" id="ref-search" type="search" placeholder="Поиск: глагол, любая его форма или перевод" autocomplete="off" aria-label="Поиск по справочнику">
+          <div class="search-wrap">
+            <input class="search" id="ref-search" type="search" placeholder="Поиск: глагол, любая его форма или перевод" autocomplete="off" aria-label="Поиск по справочнику">
+            <!-- свой крестик: встроенный в поле поиска есть не везде (на iPhone его нет) -->
+            <button type="button" class="search-clear" id="ref-search-clear" aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+          </div>
           <nav class="ref-abc" id="ref-abc" aria-label="Алфавитный указатель"></nav>
         </div>
         <p class="ref-scope" id="ref-scope"></p>
@@ -301,6 +305,6 @@
   <script src="verbs.js?v=efb59dc073"></script>
   <script src="course.js?v=9f00512a59"></script>
   <script src="core.js?v=a2811a03a1"></script>
-  <script src="app.js?v=defaa36d08"></script>
+  <script src="app.js?v=1491a4c231"></script>
 </body>
 </html>
