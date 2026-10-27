@@ -85,7 +85,7 @@
   const TYPES = ["Α", "ΑΒ", "Β1", "Β2", "Γ1", "Γ2", "Γ3", "Γ4", OTHER_TYPE];
   const typeOf = (v) => (TYPES.includes(v.type) ? v.type : OTHER_TYPE);
   const DIRS = ["gr-ru", "ru-gr"];
-  const FLOWS = ["steps", "all"]; // «По шагам» и «Всё сразу»
+  const FLOWS = ["steps", "all", "random"]; // «По шагам», «Всё сразу», «Рандом»
 
   // Справочник: буква указателя — первая буква слова без ударения и диалитики, заглавная (έχω → Ε, ϊ → Ι)
   const GREEK_ABC = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ".split("");
@@ -150,7 +150,7 @@
     if (typeof s.mastery === "boolean") p.settings.mastery = s.mastery;
     // режим курса «Ελληνικά Τώρα 1+1»: в старом прогрессе его нет — тогда включён, как у нового человека
     if (typeof s.textbook === "boolean") p.settings.textbook = s.textbook;
-    // «steps» — во вкладках времён только слова из «Знаю»; «all» — все глаголы под фильтрами
+    // «steps» — во вкладках времён только слова из «Знаю»; «all» — все глаголы под фильтрами; «random» — то же, без вкладок
     if (FLOWS.includes(s.flow)) p.settings.flow = s.flow;
     if (Number.isInteger(s.masteryGoal)) p.settings.masteryGoal = Math.min(GOAL_MAX, Math.max(GOAL_MIN, s.masteryGoal));
     const clean = (list) => {

@@ -103,11 +103,14 @@
 
   /* ---------- вкладки: отрисовка ---------- */
   let lastTab = TABS[0].id; // последнее упражнение — туда возвращает повторное нажатие на «Справочник»
-  // «Всё сразу»: вкладкам времён «Знаю» не нужно — они берут все глаголы под фильтрами
-  const allAtOnce = () => P.settings.flow === "all";
+  // «Всё сразу» и «Рандом»: «Знаю» не нужно — берутся все глаголы под фильтрами (кроме «Не учим»)
+  const allAtOnce = () => P.settings.flow !== "steps";
+  // «Рандом» — одна колода из всех форм всех времён и лиц: вкладки прячутся, выбранная вкладка запоминается
+  const randomMode = () => P.settings.flow === "random";
+  const RANDOM_TAB = { id: "random", title: "Рандом", ready: true, random: true };
   const isLocked = (t) => ((t.needsKnown && !allAtOnce()) || !t.ready) && knownAny().size === 0;
-  // «все лица» работают с формами, первая вкладка — с глаголами
-  const formsMode = () => !!(TABS.find((t) => t.id === P.settings.tab) || {}).tense;
+  // «все лица» и «Рандом» работают с формами, первая вкладка — с глаголами
+  const formsMode = () => { const t = curTab() || {}; return !!(t.tense || t.random); };
 
   function renderTabs() {
     const nav = $("tabs");
@@ -166,6 +169,7 @@
     $("panel-present1").setAttribute("aria-labelledby", "tab-" + target.id);
     $("panel-later").hidden = !!target.ready;
     $("panel-ref").hidden = !target.ref;
+    $("tabs").hidden = randomMode(); // в «Рандоме» вкладки ни при чём — колода одна на все времена и лица
     $("ref-btn").setAttribute("aria-pressed", String(!!target.ref));
     if (!target.ref) lastTab = target.id; // повторное нажатие на «Справочник» вернёт сюда
     $("dir").hidden = !!target.ref; // направление справочнику ни к чему: он показывает обе стороны сразу
@@ -318,7 +322,9 @@
         P.settings.flow = b.dataset.flow;
         save();
         renderFlow();
-        selectTab(P.settings.tab); // вернувшись к «По шагам» без «Знаю», вкладка времён закрывается — уходим на первую
+        // выбор режима — это «хочу тренироваться»: из справочника уходим к последнему упражнению. Вернувшись
+        // к «По шагам» без «Знаю», вкладка времён закрывается — selectTab сам уведёт на первую
+        selectTab(P.settings.tab === "ref" ? lastTab : P.settings.tab);
         restartDeck();
       };
     }
@@ -362,6 +368,7 @@
   // «все лица» берут шесть лиц, «· я» — только первое, какое есть (у безличного πρέπει это 3-е).
   // Лицо без русской формы карточкой не становится (у B1 их пока нет) — счётчик называет такие глаголы.
   function formsOf(v, tab) {
+    if (tab.random) return Core.TENSES.flatMap((t) => formsOf(v, { tense: t })); // все времена, все лица
     const t = tab.tense;
     const ids = [];
     v[t].forEach((gr, p) => { if (gr && (v["ru_" + t] || [])[p]) ids.push(Core.formId(t, v.verb, p)); });
@@ -378,7 +385,8 @@
     const skip = new Set(P.skip);
     return VERBS.filter((v) => inScope(v) && !skip.has(v.verb));
   }
-  const curTab = () => TABS.find((t) => t.id === P.settings.tab);
+  // справочник открывается и поверх «Рандома»; в остальном «Рандом» подменяет выбранную вкладку, не трогая её
+  const curTab = () => (randomMode() && P.settings.tab !== "ref" ? RANDOM_TAB : TABS.find((t) => t.id === P.settings.tab));
   // Усвоение выключено — в колоду идёт всё, включая освоенное: список «Освоено» тогда скрыт,
   // и спрятанное в нём иначе было бы не достать
   const isDone = (id, dir = P.settings.dir) => P.settings.mastery && Core.isMastered(P, dir, id);
@@ -482,6 +490,13 @@
         alt.textContent = "тот же перевод: " + others.join(", ");
         alt.lang = "el";
       }
+    }
+    if (forms && randomMode() && flipped) {
+      // в «Рандоме» время не следует из вкладки — называем его на обороте; на лицевой стороне оно было бы подсказкой
+      const tn = document.createElement("span");
+      tn.className = "conj tense-tag";
+      tn.textContent = TENSE_TITLES[it.tense];
+      meta.append(tn);
     }
     if (flipped) {
       const l = document.createElement("span");

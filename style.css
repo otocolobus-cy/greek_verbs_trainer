@@ -522,3 +522,12 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px; }
 /* дата выкладки и набора курса — своей строкой под источниками */
 .foot-updated { display: block; margin-top: 6px; }
 .foot-updated[hidden] { display: none; }
+
+/* «Рандом»: ряд вкладок спрятан — у .tabs свой display, правило браузера для hidden его не перебивает */
+.tabs[hidden] { display: none; }
+.tense-tag { font-weight: 600; color: var(--accent); }
+@media (max-width: 520px) {
+  /* три режима в строку не влезали вместе с подписью — на телефоне подпись «Режим» уходит, кнопки плотнее */
+  .flow-label { display: none; }
+  #flow button { padding: 6px 12px; }
+}
