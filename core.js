@@ -94,9 +94,12 @@
 
   // «γράφουν(ε)» — необязательное -ε, как пишут учебники (ставит сборка, scripts/forms.py). Для поиска это обе
   // формы, для озвучки — короткая: скобку голос прочитал бы буквально
+  // «θα βγουν / θα βγούνε» — там, где скобка не годится (с -ε появляется ударение): поиску обе, голосу первая
   const OPT_E = "(ε)";
-  const formVariants = (f) => (!f ? [] : f.endsWith(OPT_E) ? [f.slice(0, -OPT_E.length), f.slice(0, -OPT_E.length) + "ε"] : [f]);
-  const speakable = (s) => String(s || "").split(OPT_E).join("");
+  const ALT = " / ";
+  const formVariants = (f) => (!f ? [] : f.includes(ALT) ? f.split(ALT).flatMap(formVariants)
+    : f.endsWith(OPT_E) ? [f.slice(0, -OPT_E.length), f.slice(0, -OPT_E.length) + "ε"] : [f]);
+  const speakable = (s) => String(s || "").split(ALT)[0].split(OPT_E).join("");
   const TENSES = ["present", "past", "future"];
 
   // Во вкладках форм учёт ведётся по отдельной форме, а не по глаголу: «present:γράφω:3» — «γράφουμε».
