@@ -983,12 +983,13 @@
 
   /* ---------- справочник ---------- */
   // Список — глаголы под теми же фильтрами, что и карточки (курс, уровень, спряжение). «Не учим» справочник
-  // не прячет: это словарь, а не колода. Поиск — по самому глаголу, написанию курса, любой форме и переводу:
-  // встретил «έγραψα» — найдёшь γράφω
+  // не прячет: это словарь, а не колода. Поиск — по самому глаголу, написанию курса, любой форме и переводу,
+  // в том числе по русской форме: встретил «έγραψα» или «будешь» — найдёшь γράφω и είμαι
   const refKey = new Map();
   for (const v of VERBS) {
     const forms = Core.TENSES.flatMap((t) => v[t] || []).flatMap(Core.formVariants); // «γράφουνε» найдёт γράφω
-    refKey.set(v.verb, Core.fold([v.verb, v.spelling, ...forms, v.ru].filter(Boolean).join(" ")));
+    const ru = Core.TENSES.flatMap((t) => v["ru_" + t] || []).flatMap(Core.ruVariants);
+    refKey.set(v.verb, Core.fold([v.verb, v.spelling, ...forms, v.ru, ...ru].filter(Boolean).join(" ")));
   }
   let refVerb = null;  // открытый глагол; null — список
   $("ref-btn").addEventListener("click", () => selectTab(curTab().ref ? lastTab : "ref"));

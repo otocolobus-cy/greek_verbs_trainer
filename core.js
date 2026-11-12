@@ -100,6 +100,18 @@
   const formVariants = (f) => (!f ? [] : f.includes(ALT) ? f.split(ALT).flatMap(formVariants)
     : f.endsWith(OPT_E) ? [f.slice(0, -OPT_E.length), f.slice(0, -OPT_E.length) + "ε"] : [f]);
   const speakable = (s) => String(s || "").split(ALT)[0].split(OPT_E).join("");
+  // Русская форма для поиска — слова, а не запись карточки: «я был(а)» → «был», «была»; «вернулся(-ась)» →
+  // «вернулся», «вернулась»; «пришёл(пришла)» → обе. Местоимение отбрасывается — иначе «она» нашла бы каждый глагол
+  const RU_PRON = /^(я|ты|он\/она|мы|вы|они)\s+/;
+  function ruVariants(s) {
+    const t = String(s || "").replace(RU_PRON, "");
+    const m = /^(.*?)\((-?)([^)]*)\)(.*)$/.exec(t);
+    if (!m) return t ? [t] : [];
+    const [, head, dash, add, tail] = m;
+    const alt = dash ? head.replace(/ся$/, "") + add : add.length <= 2 ? head + add : add;
+    // скобок бывает две: «был(а) отдан(а)» — раскрываем и хвост
+    return [...new Set([head + tail, alt + tail].flatMap(ruVariants))];
+  }
   const TENSES = ["present", "past", "future"];
 
   // Во вкладках форм учёт ведётся по отдельной форме, а не по глаголу: «present:γράφω:3» — «γράφουμε».
@@ -204,5 +216,5 @@
 
   return { randomInt, shuffle, Deck, emptyProgress, normalize, toExport, fromImport,
            typeOf, OTHER_TYPE, STORAGE_KEY, LEVELS, TYPES, DIRS, FLOWS, TENSES, formId, parseFormId,
-           isMastered, GOAL_MIN, GOAL_MAX, GOAL_DEFAULT, GREEK_ABC, fold, letterOf, formVariants, speakable };
+           isMastered, GOAL_MIN, GOAL_MAX, GOAL_DEFAULT, GREEK_ABC, fold, letterOf, formVariants, speakable, ruVariants };
 });
